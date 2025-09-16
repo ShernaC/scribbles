@@ -3,10 +3,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Post-it!</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Scribbles!</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     {{-- <link rel="stylesheet" href="{{ asset('css/form.css') }}"> --}}
-    
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
 </head>
 <body>
     @if(session('success'))
@@ -92,7 +93,7 @@
     @endauth
     <!-- Main Content -->
     <main class="container pt-20 transition-all duration-300">
-        {{ $slot }}
+        {{ $slot }} {{--@yield('content')--}}
     </main>
 </body>
 </html>

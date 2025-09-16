@@ -13,7 +13,7 @@ class UserController
 {
     public function userDetails()
     {
-        if (Auth::check()) {
+        if (Auth::check()) { // no need 
             $user = Auth::user();
             
             return view('user.profile', compact('user'));

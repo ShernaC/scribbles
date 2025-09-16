@@ -37,6 +37,9 @@ Route::middleware('auth')->controller(PostController::class)->group(function () 
     Route::get('/post/all', 'getAllPosts')->name('post.all');
     Route::get('/post/{id}', 'getPost')->name('post.get');
     Route::get('/posts', 'getPostsByUserID')->name('post.getAll');
+    Route::post('/post/uploadPicture', 'uploadPicture')->name('post.upload');
 });
 
 Route::get('/user', [UserController::class, 'userDetails'])->middleware('auth')->name("user");
+
+

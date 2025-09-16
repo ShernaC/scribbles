@@ -3,10 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\PostRequest;
+use App\Http\Requests\uploadRequest;
 use App\Models\Post;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Storage;
+use PhpParser\Node\Stmt\TryCatch;
+use Illuminate\Support\Facades\Log;
 
 class PostController
 {
@@ -19,7 +24,6 @@ class PostController
     {
         $post = Post::findOrFail($id);
 
-        // Gate::authorize('own-post', $post);
         $response = Gate::inspect('update', $post);
         if (!$response->allowed()) {
             return redirect()->route('post.getAll')->with('fail', $response->message());
@@ -31,11 +35,12 @@ class PostController
     public function createPost(PostRequest $request) 
     {
         $validated = $request->validated();
-
+        
         Post::create([
             'title' => $validated['title'], 
             'content' => $validated['content'],
             'user_id' => Auth::user()->id,
+            'image' => $request->uploaded_image_path,
         ]);
 
         return redirect()->route('home')->with('success', 'Post created successfully'); 
@@ -59,11 +64,7 @@ class PostController
 
     public function getAllPosts()
     {
-        $posts = Post::with('user')->get();
-        
-        if ($posts->count() > 0) {
-            $posts = $posts->sortByDesc('created_at');
-        }
+        $posts = Post::with('user')->orderByDesc('created_at')->get();
 
         return view('post.browse', compact('posts'));
     }
@@ -72,7 +73,6 @@ class PostController
     {
         $id = (int) $id;
         $post = Post::find($id);
-
 
         $response = Gate::inspect('update', $post);
         if (!$response->allowed()) {
@@ -83,11 +83,21 @@ class PostController
             return redirect()->route('home')->with('fail', 'Failed to find post'); 
         }
 
-        $validated = $request->validate([
-            'content' => 'sometimes|required|string',
-        ]);
+        $validated = $request->validate([ 
+            'content' => 'nullable|string',
+        ]); 
 
-        $post->update($validated);
+        // dd(isset($validated['content']), empty($validated['content']));
+
+        $post->update([
+            'content' => $validated['content'] ?? '', // null coalescing operator
+        ]); 
+
+        if ($request->uploaded_image_path) {
+            $post->update([
+                'image' => $request->uploaded_image_path,
+            ]);
+        }
 
         return redirect()->route('post.getAll')->with('success', 'Post updated successfully'); 
     }
@@ -98,12 +108,57 @@ class PostController
 
         Gate::authorize('own-post', $post);
 
-        if (!$post) {
-            return redirect()->back()->with('failed', 'Failed to find post.'); 
+        try {
+            DB::beginTransaction();
+            $post->delete();
+            DB::commit();
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            report($th); // log in system
+            return redirect()->back()->with('fail', 'Post deletion failed'); 
         }
 
-        $post->delete();
-
         return redirect()->back()->with('success', 'Post deleted successfully'); 
+    }
+
+    public function uploadPicture(uploadRequest $request)
+    {
+        Log::info('Ajax request received by controller');
+        // ajax req hit sini
+        if (!$request->hasFile('image')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No file received',
+            ], 400);
+        }
+        
+        // validasi gambar 
+        try {
+            $validated = $request->validated();
+            $image = $request->file('image');
+
+            // simpan di local storage 
+            $path = Storage::disk('public')->putFile('images', $image);
+
+            return response()->json([
+                'success' => true, 
+                'message' => 'Image uplaoded successfully',
+                'data' => [
+                    'path' => $path,
+                    'url' => asset('storage/' . $path),
+                ]
+            ], 200);
+
+        } catch (\Exception $e) {
+            Log::error('Image upload failed: ' . $e->getMessage(), [
+                'user_id' => Auth::id(),
+                'file_name' => $request->file('image')?->getClientOriginalName(),
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Upload failed. Please try again.'
+            ], 500);
+        }
     }
 }

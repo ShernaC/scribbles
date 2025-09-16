@@ -9,7 +9,10 @@
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 px-16">
                 @foreach($posts as $post)
                     <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden">
-                        <div class="bg-gradient-to-r from-green-500 to-sky-600 h-32 relative">
+                        <div class="h-32 relative {{$post->image ? '' : 'bg-gradient-to-r from-green-500 to-sky-600'}}">
+                            @if($post->image)
+                            <img src="{{ asset('storage/' . $post->image) }}" alt="User Image" class="w-full h-full object-cover rounded-t-lg" >
+                            @endif
                             <div class="absolute bottom-2 left-4 right-4">
                                 <span class="inline-block px-2 py-1 bg-white bg-opacity-90 text-xs font-semibold text-gray-800 rounded-full">
                                     Post #{{ $loop->iteration }}

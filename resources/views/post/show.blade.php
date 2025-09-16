@@ -9,6 +9,10 @@
                         </h1>
                     </header>
 
+                    <div class="max-w-200">
+                        <img id="image" src="{{ asset('storage/' . $post->image) }}" alt="User Image">
+                    </div>
+
                     <div class="prose prose-lg max-w-none">
                         <div class="text-gray-700 leading-relaxed space-y-6">
                             {{ $post->content }}

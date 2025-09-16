@@ -7,6 +7,7 @@ function openModal(postId) {
     const author = postData.querySelector('[data-author]').getAttribute('data-author');
     const date = postData.querySelector('[data-date]').getAttribute('data-date');
     const words = postData.querySelector('[data-words]').getAttribute('data-words');
+    const image = postData.querySelector('[data-image]');
     
     // Populate modal
     document.getElementById('modalTitle').textContent = title;
@@ -14,6 +15,17 @@ function openModal(postId) {
     document.getElementById('modalAuthor').textContent = author;
     document.getElementById('modalDate').textContent = date;
     document.getElementById('modalWords').textContent = words;
+    
+    const imageContainer = document.getElementById('modalImageContainer');
+    const modalImage = document.getElementById('modalImage');
+
+    if (image) {
+        const imageSrc = image.getAttribute('data-image');
+        modalImage.src = imageSrc;
+        imageContainer.style.display = 'block';
+    } else {
+        imageContainer.style.display = 'none';
+    }
     
     // Show modal and blur background
     document.getElementById('postModal').classList.remove('hidden');

@@ -40,6 +40,8 @@ class AuthController
         
         Auth::login($user);
 
+        // UserRegistered::dispatch($user);
+
         return redirect()->route('home');
     }
 
